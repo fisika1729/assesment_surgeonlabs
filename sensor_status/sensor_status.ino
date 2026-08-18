@@ -1,15 +1,3 @@
-// sensor_status.ino
-// ESP32 (ESP32-WROOM-32UE) analog sensor status monitor.
-// Samples a buffered sensor about 10x/s, drives the status LED by a
-// threshold, and lets a push-button toggle between two thresholds.
-
-// Hardware from the Part A schematic:
-//   Sensor:  SIG_IN --10k-- node --18k-- GND, node buffered by the
-//            MCP6001 voltage follower, then filtered (16k + 100n) to ADC.
-//   ADC pin: GPIO36 (SENSOR_VP / ADC1_CH0).
-//   LED:     GPIO19, active-high through 150 ohm.
-//   Button:  GPIO0 (BOOT), active-low with internal pull-up.
-// Change the defines below to match a different board.
 
 #define SENSOR_PIN  36
 #define LED_PIN     19
@@ -26,7 +14,6 @@
 #define THR_LO      1.0F
 #define THR_HI      2.0F
 
-// Part A divider: node = sensor * 18k/(10k+18k), so sensor = node * 14/9.
 const float kDividerGain = (10.0F + 18.0F) / 18.0F;
 
 float threshold = THR_LO;
@@ -52,9 +39,6 @@ void setup() {
 
 void loop() {
   unsigned long now = millis();
-
-  // Non-blocking debounce: the pin must hold one level for DEBOUNCE_MS
-  // before it counts. Each clean press flips the active threshold.
   int reading = digitalRead(BTN_PIN);
   if (reading != stable) {
     stable = reading;
@@ -67,8 +51,6 @@ void loop() {
     }
   }
 
-  // Sample on a fixed timer. The loop never blocks, so the button stays
-  // responsive while the ADC and serial work.
   if (now - lastSample >= LOOP_MS) {
     lastSample = now;
     float v = readSensorVolts();
